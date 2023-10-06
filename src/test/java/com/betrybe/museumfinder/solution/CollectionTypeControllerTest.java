@@ -14,7 +14,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -27,7 +28,7 @@ public class CollectionTypeControllerTest {
   MockMvc mockMvc;
 
   @Test
-  @DisplayName("1 - Testa getCollectionTypesCount")
+  @DisplayName("1 - Testa caso de sucesso getCollectionTypesCount")
   public void testGetCollectionTypesCount() throws Exception {
     String[] typeList = {"arqueologia"};
     CollectionTypeCount collectionTypeCount = new CollectionTypeCount(typeList, 84L);
@@ -39,9 +40,23 @@ public class CollectionTypeControllerTest {
     String collectionType = collectionTypeCount.collectionTypes()[0];
     String url = "/collections/count/arqueologia";
 
-    mockMvc.perform(MockMvcRequestBuilders.get(url))
+    mockMvc.perform(get(url))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.collectionTypes").value(collectionType))
         .andExpect(jsonPath("$.count").value(collectionTypeCount.count()));
+  }
+
+  @Test
+  @DisplayName("2 - Testa se collectionType não for encontrado")
+  public void testNotFoundGetCollectionTypesCount() throws Exception {
+    String[] typeList = {""};
+    CollectionTypeCount collectionTypeCount = new CollectionTypeCount(typeList, 0L);
+
+    Mockito.when(collectionTypeService.countByCollectionTypes(any())).thenReturn(
+        collectionTypeCount
+    );
+
+    mockMvc.perform(get("/collections/count/"))
+        .andExpect(status().isNotFound());
   }
 }
